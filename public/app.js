@@ -119,17 +119,28 @@ $("clearAll").onclick = () => {
 
 /* ---------- API helpers ---------- */
 async function post(path, payload) {
-  const r = await fetch(path, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  return await r.json();
+  try {
+    const r = await fetch(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    
+    if (!r.ok) {
+      throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+    }
+    
+    return await r.json();
+  } catch (error) {
+    console.error("API Error:", error);
+    return { error: error.message || "Network error occurred" };
+  }
 }
 
 /* ---------- Reports ---------- */
 $("btnStudentAvg").onclick = async () => {
   const student = $("avgStudent").value;
+  if (!student) return alert("Please select a student.");
   const data = await post("/api/student-avg", { grades: state.grades, student });
   $("out").textContent = JSON.stringify(data, null, 2);
 };
@@ -137,12 +148,14 @@ $("btnStudentAvg").onclick = async () => {
 $("btnSubjectAvg").onclick = async () => {
   const student = $("avgStudent2").value;
   const subject = $("avgSubject").value.trim();
+  if (!student) return alert("Please select a student.");
   if (!subject) return alert("Enter subject name.");
   const data = await post("/api/subject-avg", { grades: state.grades, student, subject });
   $("out").textContent = JSON.stringify(data, null, 2);
 };
 
 $("btnRank").onclick = async () => {
+  if (Object.keys(state.grades).length === 0) return alert("Add some students and grades first.");
   const data = await post("/api/students-rank", { grades: state.grades });
   $("out").textContent = JSON.stringify(data, null, 2);
 };

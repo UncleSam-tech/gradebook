@@ -1,7 +1,9 @@
 # api/index.py
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 # ----------------------
 # Core operations
@@ -80,40 +82,55 @@ def ping():
 
 @app.post("/api/student-avg")
 def api_student_avg():
-    data = request.get_json(force=True) or {}
-    grades = data.get("grades", {})
-    student = data.get("student", "")
-    if not isinstance(grades, dict) or not isinstance(student, str):
-        return jsonify({"error": "Invalid request"}), 400
-    return jsonify({"student": student, "student_avg": student_avg(student, grades)})
+    try:
+        data = request.get_json(force=True) or {}
+        grades = data.get("grades", {})
+        student = data.get("student", "")
+        if not isinstance(grades, dict) or not isinstance(student, str):
+            return jsonify({"error": "Invalid request"}), 400
+        return jsonify({"student": student, "student_avg": student_avg(student, grades)})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.post("/api/subject-avg")
 def api_subject_avg():
-    data = request.get_json(force=True) or {}
-    grades = data.get("grades", {})
-    subject = data.get("subject", "")
-    student = data.get("student", "")
-    if not isinstance(grades, dict) or not isinstance(subject, str) or not isinstance(student, str):
-        return jsonify({"error": "Invalid request"}), 400
-    return jsonify({
-        "student": student,
-        "subject": subject,
-        "subject_avg": subject_avg(subject, grades, student)
-    })
+    try:
+        data = request.get_json(force=True) or {}
+        grades = data.get("grades", {})
+        subject = data.get("subject", "")
+        student = data.get("student", "")
+        if not isinstance(grades, dict) or not isinstance(subject, str) or not isinstance(student, str):
+            return jsonify({"error": "Invalid request"}), 400
+        return jsonify({
+            "student": student,
+            "subject": subject,
+            "subject_avg": subject_avg(subject, grades, student)
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.post("/api/students-rank")
 def api_students_rank():
-    data = request.get_json(force=True) or {}
-    grades = data.get("grades", {})
-    if not isinstance(grades, dict):
-        return jsonify({"error": "Invalid request"}), 400
-    return jsonify({"students_rank": students_rank(grades)})
+    try:
+        data = request.get_json(force=True) or {}
+        grades = data.get("grades", {})
+        if not isinstance(grades, dict):
+            return jsonify({"error": "Invalid request"}), 400
+        return jsonify({"students_rank": students_rank(grades)})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.post("/api/full-student-data")
 def api_full_student_data():
-    data = request.get_json(force=True) or {}
-    grades = data.get("grades", {})
-    student = data.get("student", "")
-    if not isinstance(grades, dict) or not isinstance(student, str):
-        return jsonify({"error": "Invalid request"}), 400
-    return jsonify({"full_student_data": full_student_data(grades, student)})
+    try:
+        data = request.get_json(force=True) or {}
+        grades = data.get("grades", {})
+        student = data.get("student", "")
+        if not isinstance(grades, dict) or not isinstance(student, str):
+            return jsonify({"error": "Invalid request"}), 400
+        return jsonify({"full_student_data": full_student_data(grades, student)})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == "__main__":
+    app.run(debug=True)

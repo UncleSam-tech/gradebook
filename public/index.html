@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Grades</title>
+  <!--script src="https://cdn.tailwindcss.com"></script>-->
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 24px; max-width: 900px; }
+    h1 { margin-top: 0; }
+    section { border: 1px solid #ddd; padding: 16px; border-radius: 10px; margin-bottom: 16px; }
+    label { display: block; margin: 8px 0 4px; }
+    input, select, button, textarea { padding: 8px; margin-right: 8px; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    table { border-collapse: collapse; width: 100%; margin-top: 8px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    .muted { color: #666; font-size: 0.9em; }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid #ccc; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } }
+    pre { white-space: pre-wrap; background: #fafafa; padding: 12px; border-radius: 8px; }
+  </style>
+<body>
+    <h1>Gradebook (Chingu Tier‑1 Demo)</h1>
+    <p class="muted">
+      Local demo stores data in your browser (<code>localStorage</code>). The Python API on Vercel computes averages & rankings.
+    </p>
+  
+    <section class="grid-2">
+      <div>
+        <h2>Students</h2>
+        <div class="row">
+          <input id="studentName" placeholder="Student name" />
+          <button id="addStudent">Add</button>
+        </div>
+        <ul id="studentsList"></ul>
+      </div>
+  
+      <div>
+        <h2>Subjects & Grades</h2>
+        <div class="row">
+          <select id="studentSelect"></select>
+          <input id="subjectName" placeholder="Subject (e.g., Math)" />
+          <button id="addSubject">Add subject</button>
+        </div>
+        <div class="row">
+          <select id="subjectSelect"></select>
+          <input id="gradeVal" type="number" placeholder="Grade (0–100)" />
+          <button id="addGrade">Add grade</button>
+        </div>
+      </div>
+    </section>
+  
+    <section>
+      <h2>Current Data</h2>
+      <table id="dataTable">
+        <thead>
+          <tr><th>Student</th><th>Subject</th><th>Grades</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <button id="clearAll" class="pill">Clear all data</button>
+    </section>
+  
+    <section class="grid-2">
+      <div>
+        <h2>Reports</h2>
+        <div class="row">
+          <select id="avgStudent"></select>
+          <button id="btnStudentAvg">Student Average</button>
+        </div>
+        <div class="row">
+          <select id="avgStudent2"></select>
+          <input id="avgSubject" placeholder="Subject name" />
+          <button id="btnSubjectAvg">Subject Average</button>
+        </div>
+        <div class="row">
+          <button id="btnRank">Rank Students</button>
+          <button id="btnFullReport">Full Report</button>
+        </div>
+      </div>
+      <div>
+        <h2>Output</h2>
+        <pre id="out">(results appear here)</pre>
+      </div>
+    </section>
+  
+    <section>
+      <h2>Notes</h2>
+      <ul class="muted">
+        <li>Demonstrates: basic syntax, control flow, functions, data structures, and simple persistence (localStorage).</li>
+        <li>Python API (Flask on Vercel) is stateless; it computes from the JSON you send.</li>
+      </ul>
+    </section>
+  
+    <script src="./app.js"></script>
+  </body>
+  </html>

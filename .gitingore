@@ -24,6 +24,7 @@ pip-log.txt
 .idea/
 *.swp
 *.swo
+.cursor/
 
 # --- OS Files ---
 .DS_Store

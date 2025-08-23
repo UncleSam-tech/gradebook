@@ -120,17 +120,22 @@ $("clearAll").onclick = () => {
 /* ---------- API helpers ---------- */
 async function post(path, payload) {
   try {
+    console.log("Making API call to:", path, "with payload:", payload);
     const r = await fetch(path, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
     
+    console.log("Response status:", r.status, r.statusText);
+    
     if (!r.ok) {
       throw new Error(`HTTP ${r.status}: ${r.statusText}`);
     }
     
-    return await r.json();
+    const data = await r.json();
+    console.log("Response data:", data);
+    return data;
   } catch (error) {
     console.error("API Error:", error);
     return { error: error.message || "Network error occurred" };
@@ -141,7 +146,9 @@ async function post(path, payload) {
 $("btnStudentAvg").onclick = async () => {
   const student = $("avgStudent").value;
   if (!student) return alert("Please select a student.");
+  console.log("Sending student avg request:", { grades: state.grades, student });
   const data = await post("/api/student-avg", { grades: state.grades, student });
+  console.log("Received response:", data);
   $("out").textContent = JSON.stringify(data, null, 2);
 };
 
@@ -150,20 +157,26 @@ $("btnSubjectAvg").onclick = async () => {
   const subject = $("avgSubject").value.trim();
   if (!student) return alert("Please select a student.");
   if (!subject) return alert("Enter subject name.");
+  console.log("Sending subject avg request:", { grades: state.grades, student, subject });
   const data = await post("/api/subject-avg", { grades: state.grades, student, subject });
+  console.log("Received response:", data);
   $("out").textContent = JSON.stringify(data, null, 2);
 };
 
 $("btnRank").onclick = async () => {
   if (Object.keys(state.grades).length === 0) return alert("Add some students and grades first.");
+  console.log("Sending rank request:", { grades: state.grades });
   const data = await post("/api/students-rank", { grades: state.grades });
+  console.log("Received response:", data);
   $("out").textContent = JSON.stringify(data, null, 2);
 };
 
 $("btnFullReport").onclick = async () => {
   const student = $("avgStudent").value || Object.keys(state.grades)[0] || "";
   if (!student) return alert("Add a student first.");
+  console.log("Sending full report request:", { grades: state.grades, student });
   const data = await post("/api/full-student-data", { grades: state.grades, student });
+  console.log("Received response:", data);
   $("out").textContent = JSON.stringify(data, null, 2);
 };
 

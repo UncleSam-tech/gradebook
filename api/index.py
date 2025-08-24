@@ -1,9 +1,16 @@
 # api/index.py
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import logging
 
+# ----- logging -----
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# ----- app -----
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app)
+logger.info("Flask app created successfully")
 
 # ----------------------
 # Core operations
@@ -21,7 +28,6 @@ def student_avg(student, grades):
 
     per_subject_avgs = []
     for grade_list in grades[student].values():
-        # grade_list is a list of numbers/strings
         nums = [float(g) for g in grade_list]
         a = _avg(nums)
         if a is not None:
@@ -74,18 +80,22 @@ def full_student_data(grades, student):
     }
 
 # ----------------------
-# API Endpoints
+# Routes (IMPORTANT: no '/api' prefix here)
+# On Vercel these will live under /api/index/<route>
 # ----------------------
-@app.route("/", methods=["GET"])
+@app.get("/")
 def root():
+    logger.info("Root endpoint accessed")
     return jsonify({"message": "Flask API is running on Vercel!"})
 
-@app.route("/api/ping", methods=["GET"])
+@app.get("/ping")
 def ping():
+    logger.info("Ping endpoint accessed")
     return jsonify({"ok": True})
 
-@app.route("/api/student-avg", methods=["POST"])
-def api_student_avg():
+@app.post("/student-avg")
+def route_student_avg():
+    logger.info("Student average endpoint accessed")
     try:
         data = request.get_json(force=True) or {}
         grades = data.get("grades", {})
@@ -94,10 +104,12 @@ def api_student_avg():
             return jsonify({"error": "Invalid request"}), 400
         return jsonify({"student": student, "student_avg": student_avg(student, grades)})
     except Exception as e:
+        logger.exception("Error in student average")
         return jsonify({"error": str(e)}), 500
 
-@app.route("/api/subject-avg", methods=["POST"])
-def api_subject_avg():
+@app.post("/subject-avg")
+def route_subject_avg():
+    logger.info("Subject average endpoint accessed")
     try:
         data = request.get_json(force=True) or {}
         grades = data.get("grades", {})
@@ -111,10 +123,12 @@ def api_subject_avg():
             "subject_avg": subject_avg(subject, grades, student)
         })
     except Exception as e:
+        logger.exception("Error in subject average")
         return jsonify({"error": str(e)}), 500
 
-@app.route("/api/students-rank", methods=["POST"])
-def api_students_rank():
+@app.post("/students-rank")
+def route_students_rank():
+    logger.info("Students rank endpoint accessed")
     try:
         data = request.get_json(force=True) or {}
         grades = data.get("grades", {})
@@ -122,10 +136,12 @@ def api_students_rank():
             return jsonify({"error": "Invalid request"}), 400
         return jsonify({"students_rank": students_rank(grades)})
     except Exception as e:
+        logger.exception("Error in students rank")
         return jsonify({"error": str(e)}), 500
 
-@app.route("/api/full-student-data", methods=["POST"])
-def api_full_student_data():
+@app.post("/full-student-data")
+def route_full_student_data():
+    logger.info("Full student data endpoint accessed")
     try:
         data = request.get_json(force=True) or {}
         grades = data.get("grades", {})
@@ -134,10 +150,20 @@ def api_full_student_data():
             return jsonify({"error": "Invalid request"}), 400
         return jsonify({"full_student_data": full_student_data(grades, student)})
     except Exception as e:
+        logger.exception("Error in full student data")
         return jsonify({"error": str(e)}), 500
 
-# Vercel requires this
-app.debug = False
+# Error handlers
+@app.errorhandler(404)
+def not_found(_):
+    logger.warning("404: %s", request.url)
+    return jsonify({"error": "Not found"}), 404
 
-# For Vercel deployment - don't use app.run()
-# Vercel will call the app directly
+@app.errorhandler(500)
+def internal_error(e):
+    logger.error("500: %s", str(e))
+    return jsonify({"error": "Internal server error"}), 500
+
+# Vercel imports this module and uses the 'app' object automatically.
+if __name__ == "__main__":
+    app.run(debug=False)

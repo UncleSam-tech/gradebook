@@ -1,5 +1,6 @@
 // public/app.js
 const LS_KEY = "grades"; // { student: { subject: [grades...] } }
+const API_BASE = "/api/index"; // because file is api/index.py
 
 const $ = (id) => document.getElementById(id);
 const state = { grades: {} };
@@ -7,7 +8,9 @@ const state = { grades: {} };
 function load() {
   try {
     state.grades = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
-  } catch { state.grades = {}; }
+  } catch {
+    state.grades = {};
+  }
 }
 
 function save() {
@@ -25,6 +28,7 @@ function ensureSubject(student, subject) {
 }
 
 function render() {
+  // Students list
   const ul = $("studentsList");
   ul.innerHTML = "";
   Object.keys(state.grades).forEach((s) => {
@@ -33,17 +37,21 @@ function render() {
     ul.appendChild(li);
   });
 
+  // Rebuild selects
   const selects = [$("studentSelect"), $("avgStudent"), $("avgStudent2")];
-  selects.forEach(sel => { sel.innerHTML = ""; });
+  selects.forEach((sel) => (sel.innerHTML = ""));
   Object.keys(state.grades).forEach((s) => {
-    selects.forEach(sel => {
+    selects.forEach((sel) => {
       const opt = document.createElement("option");
-      opt.value = s; opt.textContent = s;
+      opt.value = s;
+      opt.textContent = s;
       sel.appendChild(opt);
     });
   });
+
   rebuildSubjectSelect();
 
+  // Table
   const tbody = $("dataTable").querySelector("tbody");
   tbody.innerHTML = "";
   for (const [student, subjects] of Object.entries(state.grades)) {
@@ -68,9 +76,11 @@ function rebuildSubjectSelect() {
   const subjectSel = $("subjectSelect");
   subjectSel.innerHTML = "";
   if (!student || !state.grades[student]) return;
-  Object.keys(state.grades[student]).forEach((subj) => {
+  const subjects = Object.keys(state.grades[student]);
+  subjects.forEach((subj) => {
     const opt = document.createElement("option");
-    opt.value = subj; opt.textContent = subj;
+    opt.value = subj;
+    opt.textContent = subj;
     subjectSel.appendChild(opt);
   });
 }
@@ -81,6 +91,17 @@ $("addStudent").onclick = () => {
   if (!name) return alert("Enter a student name.");
   ensureStudent(name);
   $("studentName").value = "";
+
+  // Select the newly added student in all dropdowns
+  ["studentSelect", "avgStudent", "avgStudent2"].forEach((id) => {
+    const sel = $(id);
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    sel.appendChild(opt);
+    sel.value = name;
+  });
+
   save();
 };
 
@@ -91,6 +112,11 @@ $("addSubject").onclick = () => {
   if (!subject) return alert("Enter a subject name.");
   ensureSubject(student, subject);
   $("subjectName").value = "";
+
+  // Reflect new subject in subjectSelect and select it
+  rebuildSubjectSelect();
+  $("subjectSelect").value = subject;
+
   save();
 };
 
@@ -119,23 +145,21 @@ $("clearAll").onclick = () => {
 
 /* ---------- API helpers ---------- */
 async function post(path, payload) {
+  const url = `${API_BASE}${path}`; // ensure /api/index prefix
   try {
-    console.log("Making API call to:", path, "with payload:", payload);
-    const r = await fetch(path, {
+    const r = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    
-    console.log("Response status:", r.status, r.statusText);
-    
+
     if (!r.ok) {
-      throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+      // try to capture text body for easier debugging
+      const txt = await r.text().catch(() => "");
+      throw new Error(`HTTP ${r.status} ${r.statusText}${txt ? ` - ${txt}` : ""}`);
     }
-    
-    const data = await r.json();
-    console.log("Response data:", data);
-    return data;
+
+    return await r.json();
   } catch (error) {
     console.error("API Error:", error);
     return { error: error.message || "Network error occurred" };
@@ -146,9 +170,7 @@ async function post(path, payload) {
 $("btnStudentAvg").onclick = async () => {
   const student = $("avgStudent").value;
   if (!student) return alert("Please select a student.");
-  console.log("Sending student avg request:", { grades: state.grades, student });
-  const data = await post("/api/student-avg", { grades: state.grades, student });
-  console.log("Received response:", data);
+  const data = await post("/student-avg", { grades: state.grades, student });
   $("out").textContent = JSON.stringify(data, null, 2);
 };
 
@@ -157,29 +179,30 @@ $("btnSubjectAvg").onclick = async () => {
   const subject = $("avgSubject").value.trim();
   if (!student) return alert("Please select a student.");
   if (!subject) return alert("Enter subject name.");
-  console.log("Sending subject avg request:", { grades: state.grades, student, subject });
-  const data = await post("/api/subject-avg", { grades: state.grades, student, subject });
-  console.log("Received response:", data);
+  const data = await post("/subject-avg", { grades: state.grades, student, subject });
   $("out").textContent = JSON.stringify(data, null, 2);
 };
 
 $("btnRank").onclick = async () => {
   if (Object.keys(state.grades).length === 0) return alert("Add some students and grades first.");
-  console.log("Sending rank request:", { grades: state.grades });
-  const data = await post("/api/students-rank", { grades: state.grades });
-  console.log("Received response:", data);
+  const data = await post("/students-rank", { grades: state.grades });
   $("out").textContent = JSON.stringify(data, null, 2);
 };
 
 $("btnFullReport").onclick = async () => {
   const student = $("avgStudent").value || Object.keys(state.grades)[0] || "";
   if (!student) return alert("Add a student first.");
-  console.log("Sending full report request:", { grades: state.grades, student });
-  const data = await post("/api/full-student-data", { grades: state.grades, student });
-  console.log("Received response:", data);
+  const data = await post("/full-student-data", { grades: state.grades, student });
   $("out").textContent = JSON.stringify(data, null, 2);
 };
 
 /* ---------- init ---------- */
 load();
 render();
+
+// quick health check on load (optional)
+fetch(`${API_BASE}/ping`).then(r => {
+  if (!r.ok) throw new Error("Ping failed");
+  return r.json();
+}).then(j => console.log("API ping:", j))
+  .catch(e => console.warn("API ping error:", e.message));

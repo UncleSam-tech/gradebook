@@ -1,3 +1,4 @@
+import os, sys; sys.path.append(os.path.dirname(__file__))  # NEW
 from flask import Flask, request, jsonify
 from _core import student_avg as _student_avg
 

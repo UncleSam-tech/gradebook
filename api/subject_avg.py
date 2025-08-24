@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from _core import subject_avg as _subject_avg
 app = Flask(__name__)
 
-@app.post("/")
+@app.post("/", defaults={"_": ""})
 @app.post("/api/subject_avg")
 def main():
     data = request.get_json(force=True) or {}

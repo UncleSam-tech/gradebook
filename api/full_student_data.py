@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from _core import full_student_data as _full_student_data
 app = Flask(__name__)
 
-@app.post("/")
+@app.post("/", defaults={"_": ""})
 @app.post("/api/full_student_data")
 def main():
     data = request.get_json(force=True) or {}

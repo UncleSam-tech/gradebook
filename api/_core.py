@@ -1,4 +1,5 @@
 # api/_core.py
+
 def _avg(nums):
     return sum(nums) / len(nums) if nums else None
 

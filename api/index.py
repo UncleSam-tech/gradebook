@@ -76,11 +76,11 @@ def full_student_data(grades, student):
 # ----------------------
 # API Endpoints
 # ----------------------
-@app.get("/api/ping")
+@app.route("/api/ping", methods=["GET"])
 def ping():
     return jsonify({"ok": True})
 
-@app.post("/api/student-avg")
+@app.route("/api/student-avg", methods=["POST"])
 def api_student_avg():
     try:
         data = request.get_json(force=True) or {}
@@ -92,7 +92,7 @@ def api_student_avg():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.post("/api/subject-avg")
+@app.route("/api/subject-avg", methods=["POST"])
 def api_subject_avg():
     try:
         data = request.get_json(force=True) or {}
@@ -109,7 +109,7 @@ def api_subject_avg():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.post("/api/students-rank")
+@app.route("/api/students-rank", methods=["POST"])
 def api_students_rank():
     try:
         data = request.get_json(force=True) or {}
@@ -120,7 +120,7 @@ def api_students_rank():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.post("/api/full-student-data")
+@app.route("/api/full-student-data", methods=["POST"])
 def api_full_student_data():
     try:
         data = request.get_json(force=True) or {}
@@ -131,6 +131,9 @@ def api_full_student_data():
         return jsonify({"full_student_data": full_student_data(grades, student)})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# Vercel requires this
+app.debug = False
 
 if __name__ == "__main__":
     app.run(debug=True)

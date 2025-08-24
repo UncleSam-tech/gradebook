@@ -135,5 +135,5 @@ def api_full_student_data():
 # Vercel requires this
 app.debug = False
 
-if __name__ == "__main__":
-    app.run(debug=True)
+# For Vercel deployment - don't use app.run()
+# Vercel will call the app directly

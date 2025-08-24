@@ -76,6 +76,10 @@ def full_student_data(grades, student):
 # ----------------------
 # API Endpoints
 # ----------------------
+@app.route("/", methods=["GET"])
+def root():
+    return jsonify({"message": "Flask API is running on Vercel!"})
+
 @app.route("/api/ping", methods=["GET"])
 def ping():
     return jsonify({"ok": True})

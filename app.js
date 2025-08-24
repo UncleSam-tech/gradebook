@@ -13,32 +13,66 @@ function save() { localStorage.setItem(LS_KEY, JSON.stringify(state.grades)); re
 function ensureStudent(name) { if (!state.grades[name]) state.grades[name] = {}; }
 function ensureSubject(student, subject) { ensureStudent(student); if (!state.grades[student][subject]) state.grades[student][subject] = []; }
 
-function render() {
-  const ul = $("studentsList"); ul.innerHTML = "";
-  Object.keys(state.grades).forEach((s) => { const li = document.createElement("li"); li.textContent = s; ul.appendChild(li); });
+/* ---------- safe DOM helpers ---------- */
+function appendRow(tbody, student, subj, gradesArr) {
+  const tr = document.createElement("tr");
 
+  const td1 = document.createElement("td");
+  td1.textContent = student;
+
+  const td2 = document.createElement("td");
+  if (subj) {
+    td2.textContent = subj;
+  } else {
+    td2.textContent = "—";
+    td2.classList.add("muted");
+  }
+
+  const td3 = document.createElement("td");
+  if (gradesArr && gradesArr.length) {
+    td3.textContent = gradesArr.join(", ");
+  } else {
+    td3.textContent = "none";
+    td3.classList.add("muted");
+  }
+
+  tr.append(td1, td2, td3);
+  tbody.appendChild(tr);
+}
+
+function render() {
+  // students list
+  const ul = $("studentsList");
+  ul.innerHTML = "";
+  Object.keys(state.grades).forEach((s) => {
+    const li = document.createElement("li");
+    li.textContent = s;
+    ul.appendChild(li);
+  });
+
+  // selects
   const selects = [$("studentSelect"), $("avgStudent"), $("avgStudent2")];
   selects.forEach(sel => sel.innerHTML = "");
   Object.keys(state.grades).forEach((s) => {
-    selects.forEach(sel => { const opt = document.createElement("option"); opt.value = s; opt.textContent = s; sel.appendChild(opt); });
+    selects.forEach(sel => {
+      const opt = document.createElement("option");
+      opt.value = s; opt.textContent = s;
+      sel.appendChild(opt);
+    });
   });
 
   rebuildSubjectSelect();
 
+  // table (XSS-safe)
   const tbody = $("dataTable").querySelector("tbody");
   tbody.innerHTML = "";
   for (const [student, subjects] of Object.entries(state.grades)) {
     const subjectNames = Object.keys(subjects);
     if (subjectNames.length === 0) {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${student}</td><td class="muted">—</td><td class="muted">—</td>`;
-      tbody.appendChild(tr);
+      appendRow(tbody, student, "", []);
     } else {
       for (const subj of subjectNames) {
-        const tr = document.createElement("tr");
-        const grades = subjects[subj].join(", ");
-        tr.innerHTML = `<td>${student}</td><td>${subj}</td><td>${grades || "<span class='muted'>none</span>"}</td>`;
-        tbody.appendChild(tr);
+        appendRow(tbody, student, subj, subjects[subj] || []);
       }
     }
   }
@@ -103,8 +137,15 @@ $("clearAll").onclick = () => { if (confirm("Clear all data?")) { state.grades =
 async function post(endpoint, payload) {
   const url = `/api/${endpoint}`; // one function per endpoint
   try {
-    const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-    if (!r.ok) { const txt = await r.text().catch(() => ""); throw new Error(`HTTP ${r.status} ${r.statusText}${txt ? ` - ${txt}` : ""}`); }
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!r.ok) {
+      const txt = await r.text().catch(() => "");
+      throw new Error(`HTTP ${r.status} ${r.statusText}${txt ? ` - ${txt}` : ""}`);
+    }
     return await r.json();
   } catch (e) {
     console.error("API Error:", e);
@@ -146,4 +187,7 @@ $("btnFullReport").onclick = async () => {
 load();
 render();
 // health check
-fetch("/api/ping").then(r => r.json()).then(j => console.log("API ping:", j)).catch(e => console.warn("Ping error:", e.message));
+fetch("/api/ping")
+  .then(r => r.json())
+  .then(j => console.log("API ping:", j))
+  .catch(e => console.warn("Ping error:", e.message));

@@ -3,7 +3,6 @@ def _avg(nums):
     return sum(nums) / len(nums) if nums else None
 
 def student_avg(student, grades):
-    # grades: { student: { subject: [grades...] } }
     if student not in grades or not grades[student]:
         return None
     per_subject_avgs = []
